@@ -1,0 +1,10 @@
+{
+  "name": "phishing-email-analyzer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Email header phishing analyzer with server-side AbuseIPDB proxy",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  }
+}
