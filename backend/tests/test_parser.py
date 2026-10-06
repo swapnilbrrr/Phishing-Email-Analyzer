@@ -7,7 +7,7 @@ Reply-To: collect@evil.example
 Return-Path: bounce@mailer.evil.example
 Subject: URGENT: Verify your account
 Authentication-Results: mx.example; spf=fail smtp.mailfrom=paypa1-example.com; dkim=fail; dmarc=fail
-Received: from mx.evil.example (198.51.100.23) by mx.example with ESMTP
+Received: from mx.evil.example (8.8.8.8) by mx.example with ESMTP
 Message-ID: <123@example>
 Date: Tue, 6 Oct 2026 10:00:00 +0000
 
@@ -36,5 +36,5 @@ def test_parser_extracts_identity_auth_and_delivery():
     assert auth.dkim.result == "fail"
     assert auth.dmarc.result == "fail"
     assert delivery.hop_count == 1
-    assert delivery.earliest_public_ip == "198.51.100.23"
+    assert delivery.earliest_public_ip == "8.8.8.8"
     assert "https://paypa1-example.com/login" in body
