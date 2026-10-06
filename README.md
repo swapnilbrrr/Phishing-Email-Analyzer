@@ -1,88 +1,125 @@
-# PhishScan - Email Threat Analyzer
 
-A clean, local-first phishing email header analyzer with server-side AbuseIPDB reputation checks.
+# Phishing Email Analyzer
 
-## Highlights
+An explainable, local-first email threat analysis system.
 
-- Real-time parsing of raw email headers
-- SPF, DKIM, and DMARC signal scoring
-- Typosquat and display-name spoof checks
-- URL extraction with VirusTotal quick links
-- AbuseIPDB checks through a backend proxy (key never exposed to browser)
+The v2 rebuild separates the **analysis engine** from the interface. The engine is the source of truth; the UI is a consumer of structured findings.
 
-## Security Model
+## What changed in v2
 
-Your AbuseIPDB key is **not stored in frontend code**.  
-It is loaded by `server.js` from a local config file and used only on the backend endpoint:
+- Python analysis engine with Pydantic data models
+- RFC-aware parsing through Python's standard email parser
+- Authentication, identity, delivery, content, URL, and correlation signals
+- Explainable detections with severity, confidence, score, and evidence
+- Risk score that is explicitly **not** presented as phishing probability
+- React + TypeScript investigation workspace
+- Safe rendering of untrusted email-derived text
+- No automatic URL fetching
+- Input size guard and baseline browser security headers
+- Test fixtures for phishing and benign cases
+- GitHub Actions CI for backend tests and frontend build
 
-- `GET /api/abuseipdb?ip=<IPv4>`
+## Architecture
 
-This keeps the key hidden from public client-side source.
+    Raw email
+       |
+       v
+    Email parser
+       |
+       +--> identity
+       +--> authentication
+       +--> delivery path
+       +--> body/content signals
+       +--> URLs / domains / IPs
+       |
+       v
+    Detection engine
+       |
+       v
+    Evidence correlation
+       |
+       v
+    Risk + confidence + verdict
+       |
+       v
+    FastAPI
+       |
+       v
+    React investigation UI
 
-## Project Structure
+External enrichment providers such as AbuseIPDB, VirusTotal, RDAP, and DNS are deliberately kept out of the first core milestone so the detection logic can be tested independently.
 
-- `public/index.html` - analyzer UI
-- `public/styles.css` - UI styles
-- `public/app.js` - frontend logic and scoring engine
-- `server.js` - local HTTP server and AbuseIPDB proxy
-- `config.example.js` - sample local secret config
-- `config.local.js` - local secret file (gitignored)
-- `.gitignore` - excludes secrets and local artifacts
+## UX direction
 
-## Quick Start
+The interface is designed around the user's main task instead of mirroring the internal architecture:
 
-### 1) Prerequisites
+- one dominant task: analyze an email
+- visible feedback while the system parses and analyzes
+- clear paste and .eml file affordances
+- progressive disclosure through result tabs
+- findings explain what was observed, why it matters, and confidence
+- recognition over recall: familiar email concepts, plain labels, minimal decoration
+- error prevention: file type and size checks before submission
+- keyboard access and visible focus states
+- severity color is supplementary, not the only signal
 
-- Node.js 18+
+## Local development
 
-### 2) Install
+### Backend
 
-```bash
-npm install
-```
+Requires Python 3.10+.
 
-### 3) Configure your AbuseIPDB key (local or hosting)
+    python -m venv .venv
+    .venv\Scripts\Activate.ps1
+    pip install -r backend/requirements.txt
+    uvicorn backend.app.main:app --reload --port 8000
 
-#### Option A (recommended, hosting-friendly): environment variable
+API endpoints:
 
-Set `ABUSEIPDB_API_KEY` in your hosting provider’s environment variables.
+- GET /health
+- POST /api/v1/analyze
+- GET /docs for local OpenAPI exploration
 
-For local PowerShell (current session):
+### Frontend
 
-```powershell
-$env:ABUSEIPDB_API_KEY="YOUR_KEY_HERE"
-npm start
-```
+Requires a Node.js release supported by the current Vite toolchain.
 
-#### Option B (local dev fallback): `config.local.js`
+    cd frontend
+    npm install
+    npm run dev
 
-Copy `config.example.js` to `config.local.js` and set:
+Open http://localhost:5173.
 
-```js
-module.exports = {
-  ABUSEIPDB_API_KEY: "YOUR_KEY_HERE",
-};
-```
+The Vite development server proxies /api and /health to the FastAPI backend.
 
-### 4) Run
+## Tests
 
-```bash
-npm start
-```
+From the repository root:
 
-Open: [http://localhost:3000](http://localhost:3000)
+    python -m pytest backend/tests
 
-## GitHub Ready Checklist
+## Security posture
 
-- [x] Single app page (`public/index.html`)
-- [x] Frontend key input removed
-- [x] Backend-only AbuseIPDB key usage
-- [x] `config.local.js` ignored by Git
-- [x] Clear setup and run instructions
+Email is attacker-controlled input. Treat every parsed value as untrusted.
 
-## Important Notes
+The current rebuild therefore:
 
-- Never commit `config.local.js`.
-- Never commit `.env` files.
-- Rotate your AbuseIPDB key immediately if it was ever leaked.
-- This project is designed to run locally unless you add production hardening and deployment config.
+- never injects raw email content with HTML rendering
+- does not visit URLs during analysis
+- caps analysis input at 300 KB in the application model
+- rejects oversized requests before normal processing when Content-Length is available
+- sets baseline security headers
+- keeps enrichment/network access outside the core engine
+
+Future hardening includes stronger request limiting, attachment/MIME abuse controls, SSRF-safe enrichment workers, dependency auditing, secret scanning, and container isolation.
+
+## Roadmap
+
+1. Core parser and analysis model
+2. Detection coverage and evaluation corpus
+3. External enrichment providers
+4. Deeper header and delivery reasoning
+5. Attachment analysis with strict isolation
+6. Analyst report and JSON export
+7. CI security gates and deployment
+8. Rename/rebrand only after the engine earns its final identity

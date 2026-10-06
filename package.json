@@ -1,10 +1,14 @@
+
 {
   "name": "phishing-email-analyzer",
-  "version": "1.0.0",
+  "version": "2.0.0-alpha.1",
   "private": true,
-  "description": "Email header phishing analyzer with server-side AbuseIPDB proxy",
+  "description": "Explainable email threat analysis engine with a task-focused investigation UI.",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "frontend:install": "npm --prefix frontend install",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build",
+    "backend:install": "python -m pip install -r backend/requirements.txt",
+    "backend:test": "python -m pytest backend/tests"
   }
 }
