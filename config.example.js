@@ -1,3 +1,0 @@
-module.exports = {
-  ABUSEIPDB_API_KEY: 'PASTE_YOUR_ABUSEIPDB_KEY_HERE',
-};
