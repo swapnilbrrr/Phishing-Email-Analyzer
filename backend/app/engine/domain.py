@@ -31,7 +31,7 @@ SHORTENERS = {
 
 # Use the Public Suffix List bundled with tldextract. Disable network fetching
 # so email analysis stays deterministic and never makes implicit network calls.
-_EXTRACT = tldextract.TLDExtract(suffix_list_urls=())
+_EXTRACT = tldextract.TLDExtract(suffix_list_urls=(), include_psl_private_domains=True)
 
 
 def normalize_domain(value: str | None) -> str | None:
