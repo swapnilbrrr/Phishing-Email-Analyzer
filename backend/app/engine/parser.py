@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import ipaddress
@@ -131,25 +130,41 @@ def parse_received(values: list[str]) -> Delivery:
 
 def parse_authentication(message: Message, sender_domain: str | None) -> Authentication:
     values = header_values(message, "Authentication-Results")
-    joined = "\n".join(values)
 
     def parse_one(name: str) -> AuthSignal:
-        result_match = AUTH_RESULT_RE[name].search(joined)
-        result = result_match.group(1).lower() if result_match else "none"
+        # Keep each result and its method-specific properties in the same
+        # semicolon-delimited clause. Joining headers before parsing can
+        # accidentally pair a result with another header's domain.
+        for header in values:
+            for clause in header.split(";"):
+                result_match = AUTH_RESULT_RE[name].search(clause)
+                if not result_match:
+                    continue
 
-        auth_domain = None
-        if name == "spf":
-            domain_match = SPF_DOMAIN_RE.search(joined)
-        elif name == "dkim":
-            domain_match = DKIM_DOMAIN_RE.search(joined)
-        else:
-            domain_match = None
+                auth_domain = None
+                if name == "spf":
+                    domain_match = SPF_DOMAIN_RE.search(clause)
+                elif name == "dkim":
+                    domain_match = DKIM_DOMAIN_RE.search(clause)
+                else:
+                    domain_match = None
 
-        if domain_match:
-            auth_domain = normalize_domain(domain_match.group(1).strip("()<>"))
+                if domain_match:
+                    candidate = domain_match.group(1).strip("()<>").strip(chr(34)).strip(chr(39))
+                    auth_domain = normalize_domain(candidate)
 
-        aligned = same_organization(auth_domain, sender_domain) if auth_domain else None
-        return AuthSignal(result=result, domain=auth_domain, aligned=aligned)
+                aligned = (
+                    same_organization(auth_domain, sender_domain)
+                    if auth_domain
+                    else None
+                )
+                return AuthSignal(
+                    result=result_match.group(1).lower(),
+                    domain=auth_domain,
+                    aligned=aligned,
+                )
+
+        return AuthSignal(result="none")
 
     return Authentication(
         spf=parse_one("spf"),
