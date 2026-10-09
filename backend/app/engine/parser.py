@@ -150,7 +150,7 @@ def parse_authentication(message: Message, sender_domain: str | None) -> Authent
                     domain_match = None
 
                 if domain_match:
-                    candidate = domain_match.group(1).strip("()<>\\"'")
+                    candidate = domain_match.group(1).strip("()<>").strip(chr(34)).strip(chr(39))
                     auth_domain = normalize_domain(candidate)
 
                 aligned = (
