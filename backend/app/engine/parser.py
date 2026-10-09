@@ -19,15 +19,15 @@ from ..models import (
 )
 
 
-IPV4_RE = re.compile(r"\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b")
-URL_RE = re.compile(r"https?://[^\\s<>'\"\\]\\[(){}]+", re.I)
+IPV4_RE = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
+URL_RE = re.compile(r"https?://[^\s<>'\"\]\[(){}]+", re.I)
 AUTH_RESULT_RE = {
-    "spf": re.compile(r"\\bspf=(pass|fail|softfail|neutral|none|temperror|permerror)\\b", re.I),
-    "dkim": re.compile(r"\\bdkim=(pass|fail|neutral|none|temperror|permerror)\\b", re.I),
-    "dmarc": re.compile(r"\\bdmarc=(pass|fail|bestguesspass|none|temperror|permerror)\\b", re.I),
+    "spf": re.compile(r"\bspf=(pass|fail|softfail|neutral|none|temperror|permerror)\b", re.I),
+    "dkim": re.compile(r"\bdkim=(pass|fail|neutral|none|temperror|permerror)\b", re.I),
+    "dmarc": re.compile(r"\bdmarc=(pass|fail|bestguesspass|none|temperror|permerror)\b", re.I),
 }
-SPF_DOMAIN_RE = re.compile(r"\\bsmtp\\.mailfrom=([^\\s;]+)", re.I)
-DKIM_DOMAIN_RE = re.compile(r"\\bheader\\.d=([^\\s;]+)", re.I)
+SPF_DOMAIN_RE = re.compile(r"\bsmtp\.mailfrom=([^\s;]+)", re.I)
+DKIM_DOMAIN_RE = re.compile(r"\bheader\.d=([^\s;]+)", re.I)
 
 
 def safe_decode(value: str | None) -> str | None:
@@ -99,8 +99,8 @@ def parse_received(values: list[str]) -> Delivery:
     hops: list[ReceivedHop] = []
 
     for index, raw in enumerate(values, 1):
-        from_match = re.search(r"\\bfrom\\s+([^\\s(]+)", raw, re.I)
-        by_match = re.search(r"\\bby\\s+([^\\s;]+)", raw, re.I)
+        from_match = re.search(r"\bfrom\s+([^\s(]+)", raw, re.I)
+        by_match = re.search(r"\bby\s+([^\s;]+)", raw, re.I)
         ips = extract_ipv4s(raw)
         public = [ip for ip in ips if is_public_ip(ip)]
 
@@ -150,7 +150,7 @@ def parse_authentication(message: Message, sender_domain: str | None) -> Authent
                     domain_match = None
 
                 if domain_match:
-                    candidate = domain_match.group(1).strip("()<>\\\"'")
+                    candidate = domain_match.group(1).strip("()<>\\"'")
                     auth_domain = normalize_domain(candidate)
 
                 aligned = (
@@ -198,11 +198,11 @@ def extract_body_text(message: Message, limit: int = 120_000) -> str:
         if isinstance(content, str):
             chunks.append(content)
 
-    body = "\\n".join(chunks)
+    body = "\n".join(chunks)
     body = re.sub(r"(?is)<script.*?>.*?</script>", " ", body)
     body = re.sub(r"(?is)<style.*?>.*?</style>", " ", body)
     body = re.sub(r"(?s)<[^>]+>", " ", body)
-    return re.sub(r"\\s+", " ", body)[:limit]
+    return re.sub(r"\s+", " ", body)[:limit]
 
 
 def extract_urls(text: str) -> list[str]:
