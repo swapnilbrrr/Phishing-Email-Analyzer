@@ -150,7 +150,7 @@ def base_label(domain: str | None) -> str | None:
         pass
 
     extracted = _EXTRACT(normalized)
-    if extracted.domain:
+    if extracted.domain and extracted.suffix:
         return extracted.domain
 
     reg = registrable_domain(normalized)
