@@ -23,7 +23,7 @@ jobs:
         run: python -m pytest backend/tests
 
       - name: Evaluate synthetic detection corpus
-        run: python scripts/evaluate_corpus.py
+        run: python -m scripts.evaluate_corpus
 
   frontend:
     runs-on: ubuntu-latest
