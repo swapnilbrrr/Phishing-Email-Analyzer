@@ -941,3 +941,166 @@ textarea,
 
   .footer { flex-direction: column; }
 }
+
+@media (max-width: 560px) {
+  .topbar {
+    padding: 12px 14px;
+  }
+
+  .brand {
+    font-size: 12px;
+  }
+
+  .brand-caption {
+    font-size: 9px;
+  }
+
+  .system-status {
+    font-size: 10px;
+  }
+
+  .workspace {
+    width: calc(100% - 24px);
+    padding-top: 42px;
+  }
+
+  .hero {
+    margin-bottom: 24px;
+  }
+
+  .hero h1 {
+    font-size: clamp(30px, 9vw, 40px);
+  }
+
+  .hero-copy {
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .section-heading,
+  .result-header {
+    padding: 18px 16px;
+    gap: 12px;
+  }
+
+  .section-heading h2,
+  .result-header h2 {
+    font-size: 15px;
+  }
+
+  .dropzone {
+    margin: 16px 16px 0;
+  }
+
+  .or-divider {
+    margin: 16px;
+  }
+
+  #raw-email {
+    width: calc(100% - 32px);
+    min-height: 220px;
+    margin: 0 16px;
+    padding: 12px;
+    font-size: 11px;
+  }
+
+  .input-footer {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .input-hint {
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .primary-button {
+    justify-content: center;
+    min-height: 42px;
+  }
+
+  .inline-error {
+    margin-right: 16px;
+    margin-left: 16px;
+  }
+
+  .status-line {
+    padding: 0 16px;
+    font-size: 10px;
+  }
+
+  .overview-grid {
+    padding: 8px;
+  }
+
+  .risk-card,
+  .identity-card,
+  .top-findings-card {
+    min-height: 0;
+    padding: 16px;
+  }
+
+  .risk-card {
+    gap: 12px;
+  }
+
+  .risk-score {
+    font-size: 42px;
+  }
+
+  .tab-panel {
+    padding: 12px;
+  }
+
+  .data-row {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .data-row > span:first-child {
+    flex: 0 0 auto;
+  }
+
+  .data-row strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .evidence-row {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .auth-cluster {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .url-item {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .url-flags {
+    justify-content: flex-start;
+  }
+
+  .footer {
+    flex-direction: column;
+    gap: 7px;
+    line-height: 1.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
