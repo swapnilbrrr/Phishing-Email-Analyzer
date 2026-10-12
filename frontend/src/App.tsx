@@ -122,6 +122,7 @@ export default function App() {
 
   function handleDrop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
+    if (busy) return;
     const file = event.dataTransfer.files[0];
     if (file) void loadFile(file);
   }
@@ -164,7 +165,7 @@ export default function App() {
               <p className="section-kicker">01 · INPUT</p>
               <h2 id="input-heading">Email to analyze</h2>
             </div>
-            <button className="ghost-button" type="button" onClick={loadSample}>
+            <button className="ghost-button" type="button" onClick={loadSample} disabled={busy}>
               Load sample
             </button>
           </div>
@@ -182,6 +183,7 @@ export default function App() {
               id="email-file"
               type="file"
               accept=".eml,message/rfc822"
+              disabled={busy}
               onChange={(event) => {
                 const file = event.target.files?.[0];
                 event.currentTarget.value = "";
@@ -200,6 +202,7 @@ export default function App() {
           <textarea
             id="raw-email"
             value={rawEmail}
+            disabled={busy}
             onChange={(event) => {
               setRawEmail(event.target.value);
               if (result) setResult(null);
