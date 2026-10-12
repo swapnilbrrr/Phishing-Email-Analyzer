@@ -3,7 +3,7 @@
 Run from the repository root:
 
 ```bash
-python scripts/evaluate_corpus.py
+python -m scripts.evaluate_corpus
 ```
 
 The evaluator applies the current product threshold: `low_risk` maps to **benign**, while `suspicious` and `malicious` map to **phishing**. It reports a confusion matrix, accuracy, precision, recall, specificity, F1, and per-sample outcomes.
