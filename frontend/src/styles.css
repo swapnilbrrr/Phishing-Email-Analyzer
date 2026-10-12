@@ -900,64 +900,13 @@ textarea,
 }
 
 @media (max-width: 650px) {
-  .topbar { padding: 13px 16px; }
-
-  .workspace {
-    width: min(100% - 24px, 1020px);
-    padding-top: 42px;
-  }
-
-  .hero h1 { font-size: 35px; }
-
-  .section-heading,
-  .result-header { padding: 18px; }
-
-  .dropzone,
-  .or-divider,
-  #raw-email {
-    margin-left: 18px;
-    margin-right: 18px;
-  }
-
-  #raw-email { width: calc(100% - 36px); }
-
-  .input-footer {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 16px 18px;
-  }
-
-  .primary-button { justify-content: center; }
-
-  .input-hint { justify-content: space-between; }
-
-  .status-line { padding: 0 18px; }
-
-  .tab-panel { padding: 12px; }
-
-  .url-item { flex-direction: column; }
-
-  .url-flags { justify-content: flex-start; }
-
-  .footer { flex-direction: column; }
-}
-
-@media (max-width: 560px) {
   .topbar {
     padding: 12px 14px;
   }
 
-  .brand {
-    font-size: 12px;
-  }
-
-  .brand-caption {
-    font-size: 9px;
-  }
-
-  .system-status {
-    font-size: 10px;
-  }
+  .brand { font-size: 12px; }
+  .brand-caption { font-size: 9px; }
+  .system-status { font-size: 10px; }
 
   .workspace {
     width: calc(100% - 24px);
@@ -984,9 +933,7 @@ textarea,
   }
 
   .section-heading h2,
-  .result-header h2 {
-    font-size: 15px;
-  }
+  .result-header h2 { font-size: 15px; }
 
   .dropzone {
     margin: 16px 16px 0;
@@ -1030,9 +977,7 @@ textarea,
     font-size: 10px;
   }
 
-  .overview-grid {
-    padding: 8px;
-  }
+  .overview-grid { padding: 8px; }
 
   .risk-card,
   .identity-card,
@@ -1041,26 +986,16 @@ textarea,
     padding: 16px;
   }
 
-  .risk-card {
-    gap: 12px;
-  }
-
-  .risk-score {
-    font-size: 42px;
-  }
-
-  .tab-panel {
-    padding: 12px;
-  }
+  .risk-card { gap: 12px; }
+  .risk-score { font-size: 42px; }
+  .tab-panel { padding: 12px; }
 
   .data-row {
     align-items: flex-start;
     gap: 10px;
   }
 
-  .data-row > span:first-child {
-    flex: 0 0 auto;
-  }
+  .data-row > span:first-child { flex: 0 0 auto; }
 
   .data-row strong {
     min-width: 0;
@@ -1083,9 +1018,7 @@ textarea,
     gap: 10px;
   }
 
-  .url-flags {
-    justify-content: flex-start;
-  }
+  .url-flags { justify-content: flex-start; }
 
   .footer {
     flex-direction: column;
