@@ -55,7 +55,13 @@ export default function App() {
       return;
     }
 
+    if (new Blob([payload]).size > 300_000) {
+      setError("Email content exceeds the 300 KB analysis limit.");
+      return;
+    }
+
     setBusy(true);
+    setResult(null);
     setError("");
     setStatus("Parsing structure and extracting evidence…");
 
@@ -116,6 +122,7 @@ export default function App() {
 
   function handleDrop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
+    if (busy) return;
     const file = event.dataTransfer.files[0];
     if (file) void loadFile(file);
   }
@@ -158,7 +165,7 @@ export default function App() {
               <p className="section-kicker">01 · INPUT</p>
               <h2 id="input-heading">Email to analyze</h2>
             </div>
-            <button className="ghost-button" type="button" onClick={loadSample}>
+            <button className="ghost-button" type="button" onClick={loadSample} disabled={busy}>
               Load sample
             </button>
           </div>
@@ -176,8 +183,10 @@ export default function App() {
               id="email-file"
               type="file"
               accept=".eml,message/rfc822"
+              disabled={busy}
               onChange={(event) => {
                 const file = event.target.files?.[0];
+                event.currentTarget.value = "";
                 if (file) void loadFile(file);
               }}
             />
@@ -193,9 +202,12 @@ export default function App() {
           <textarea
             id="raw-email"
             value={rawEmail}
+            disabled={busy}
             onChange={(event) => {
               setRawEmail(event.target.value);
+              if (result) setResult(null);
               if (error) setError("");
+              setStatus("Input changed. Analyze again to refresh findings.");
             }}
             onKeyDown={handleKeyDown}
             placeholder={'From: sender@example.com\nSubject: Example message\nAuthentication-Results: ...\nReceived: from ...'}
