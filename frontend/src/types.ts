@@ -13,6 +13,12 @@ export interface EmailAnalysis {
     date?: string | null;
     message_id?: string | null;
     content_types: string[];
+    attachments: {
+      filename?: string | null;
+      content_type: string;
+      disposition?: string | null;
+      size_bytes?: number | null;
+    }[];
   };
   sender: {
     address?: string | null;
@@ -47,6 +53,13 @@ export interface EmailAnalysis {
       public_ips: string[];
     }[];
   };
+  html_links: {
+    href: string;
+    text: string;
+    href_hostname?: string | null;
+    displayed_hostname?: string | null;
+    destination_mismatch: boolean;
+  }[];
   urls: {
     url: string;
     hostname?: string | null;
