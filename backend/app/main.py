@@ -1,11 +1,12 @@
 
 from __future__ import annotations
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .engine.analyzer import ENGINE_VERSION, analyze
+from .engine.parser import EmailStructureError
 from .models import AnalysisRequest, EmailAnalysis, HealthResponse
 
 
@@ -64,4 +65,7 @@ async def health() -> HealthResponse:
 
 @app.post("/api/v1/analyze", response_model=EmailAnalysis)
 async def analyze_email(payload: AnalysisRequest) -> EmailAnalysis:
-    return analyze(payload.raw_email)
+    try:
+        return analyze(payload.raw_email)
+    except EmailStructureError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
