@@ -25,6 +25,7 @@ def test_parser_extracts_identity_auth_and_delivery():
         return_path,
         auth,
         delivery,
+        _html_links,
     ) = parse_email(SAMPLE)
 
     assert metadata.subject == "URGENT: Verify your account"
@@ -92,3 +93,106 @@ Body text.
     assert auth.dkim.domain == "signer.other.example"
     assert auth.dkim.aligned is False
     assert auth.dmarc.result == "pass"
+
+
+
+def test_html_link_extraction_detects_visible_url_destination_mismatch():
+    raw = """From: sender@example.org
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="alt"
+
+--alt
+Content-Type: text/plain; charset="utf-8"
+
+Please review the notification.
+--alt
+Content-Type: text/html; charset="utf-8"
+
+<p>Sign in at <a href="https://attacker.example/login">https://paypal.com/signin</a>.</p>
+<p><a href="https://example.org/help">Help centre</a></p>
+--alt--
+"""
+    links = parse_email(raw)[8]
+
+    assert len(links) == 2
+    assert links[0].href_hostname == "attacker.example"
+    assert links[0].displayed_hostname == "paypal.com"
+    assert links[0].destination_mismatch is True
+    assert links[1].destination_mismatch is False
+
+
+def test_text_attachment_is_reported_but_not_scanned_as_body_content():
+    raw = """From: sender@example.org
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixed"
+
+--mixed
+Content-Type: text/plain; charset="utf-8"
+
+Normal message body.
+--mixed
+Content-Type: text/plain; name="notes.txt"
+Content-Disposition: attachment; filename="notes.txt"
+
+Visit https://paypa1.example/login
+--mixed--
+"""
+    _message, body, metadata, *_rest = parse_email(raw)
+
+    assert "Normal message body." in body
+    assert "paypa1.example" not in body
+    assert len(metadata.attachments) == 1
+    assert metadata.attachments[0].filename == "notes.txt"
+    assert metadata.attachments[0].content_type == "text/plain"
+
+
+def test_mime_part_limit_fails_with_controlled_error(monkeypatch):
+    from backend.app.engine import parser
+    from backend.app.engine.parser import EmailStructureError
+
+    raw = """MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="b"
+
+--b
+Content-Type: text/plain
+
+one
+--b
+Content-Type: text/plain
+
+two
+--b--
+"""
+    monkeypatch.setattr(parser, "MAX_MIME_PARTS", 2)
+    try:
+        parse_email(raw)
+    except EmailStructureError as exc:
+        assert "parts" in str(exc)
+    else:
+        raise AssertionError("Expected MIME part limit to reject the message")
+
+
+def test_mime_depth_limit_fails_with_controlled_error(monkeypatch):
+    from backend.app.engine import parser
+    from backend.app.engine.parser import EmailStructureError
+
+    raw = """MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="outer"
+
+--outer
+Content-Type: multipart/alternative; boundary="inner"
+
+--inner
+Content-Type: text/plain
+
+nested body
+--inner--
+--outer--
+"""
+    monkeypatch.setattr(parser, "MAX_MIME_DEPTH", 1)
+    try:
+        parse_email(raw)
+    except EmailStructureError as exc:
+        assert "nesting" in str(exc)
+    else:
+        raise AssertionError("Expected MIME depth limit to reject the message")
