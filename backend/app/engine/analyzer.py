@@ -65,6 +65,7 @@ def analyze(raw_email: str) -> EmailAnalysis:
         return_path,
         authentication,
         delivery,
+        html_links,
     ) = parse_email(raw_email)
 
     combined = " ".join(
@@ -198,7 +199,7 @@ def analyze(raw_email: str) -> EmailAnalysis:
         )
 
     url_indicators: list[UrlIndicator] = []
-    url_values = extract_urls(raw_email + "\n" + body)
+    url_values = extract_urls(body + "\n" + "\n".join(item.href for item in html_links))
 
     for raw_url in url_values[:50]:
         try:
@@ -303,6 +304,21 @@ def analyze(raw_email: str) -> EmailAnalysis:
                     f"URL hostname: {hostname}",
                     f"Closest protected brand: {brand_name}",
                     f"Base-label edit distance: {distance}",
+                )
+            )
+
+    for link in html_links:
+        if link.destination_mismatch:
+            detections.append(
+                make_detection(
+                    "URL-008",
+                    "Displayed URL differs from hyperlink destination",
+                    "url",
+                    "high",
+                    0.94,
+                    20,
+                    f"Visible URL hostname: {link.displayed_hostname}",
+                    f"Hyperlink destination: {link.href}",
                 )
             )
 
@@ -424,7 +440,7 @@ def analyze(raw_email: str) -> EmailAnalysis:
                 return_path.domain,
                 authentication.spf.domain,
                 authentication.dkim.domain,
-            ] + [item.hostname for item in url_indicators]
+            ] + [item.hostname for item in url_indicators] + [item.href_hostname for item in html_links]
             if value
         }
     )
@@ -445,6 +461,7 @@ def analyze(raw_email: str) -> EmailAnalysis:
         authentication=authentication,
         delivery=delivery,
         urls=url_indicators,
+        html_links=html_links,
         domains=domains,
         ips=ips,
         detections=detections,

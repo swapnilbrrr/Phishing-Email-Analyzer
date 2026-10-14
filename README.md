@@ -123,3 +123,12 @@ Future hardening includes stronger request limiting, attachment/MIME abuse contr
 6. Analyst report and JSON export
 7. CI security gates and deployment
 8. Rename/rebrand only after the engine earns its final identity
+
+
+## MIME and HTML link analysis
+
+The parser identifies MIME attachments by filename or content disposition and reports their metadata without executing or analyzing attachment payloads as ordinary message-body text. MIME traversal is bounded by a maximum part count and nesting depth. Excessive MIME structures return a controlled validation error.
+
+For HTML email bodies, the analyzer extracts anchor text and hyperlink destinations separately. When visible link text itself contains an HTTP(S) URL, the analyzer compares its registrable organization with the hyperlink destination and raises `URL-008` when they differ. This is a heuristic signal, not proof of malicious intent. Relative links, non-URL anchor text, obfuscated rendering, CSS-generated content, and browser-specific behavior are not fully interpreted.
+
+The engine does not fetch destinations, resolve DNS, open attachments, or execute attachment content. The MIME limits bound application-level traversal and extraction; they do not replace process-level resource limits for hostile parser inputs.

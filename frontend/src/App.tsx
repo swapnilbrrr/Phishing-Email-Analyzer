@@ -338,6 +338,22 @@ export default function App() {
                     <DataRow label="Reply-To" value={result.reply_to.address ?? "Not present"} />
                     <DataRow label="Return-Path" value={result.return_path.address ?? "Not present"} />
                   </Detail>
+
+                  <Detail title="Attachments" wide>
+                    {result.metadata.attachments.length ? (
+                      result.metadata.attachments.map((attachment, index) => (
+                        <div className="evidence-row" key={(attachment.filename ?? "attachment") + index}>
+                          <div>
+                            <strong>{attachment.filename ?? "Unnamed attachment"}</strong>
+                            <span>{attachment.content_type} · {attachment.disposition ?? "disposition unspecified"}</span>
+                          </div>
+                          <span>{attachment.size_bytes == null ? "Size unavailable" : attachment.size_bytes.toLocaleString() + " bytes"}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <EmptyState text="No MIME attachments were identified. This does not mean the message has no risk." />
+                    )}
+                  </Detail>
                 </div>
               )}
 
@@ -369,7 +385,31 @@ export default function App() {
               )}
 
               {activeTab === "urls" && (
-                <div className="url-list">
+                <>
+                  {result.html_links.length > 0 && (
+                    <section className="url-list" aria-label="HTML hyperlink destinations">
+                      <h3>HTML hyperlink destinations</h3>
+                      {result.html_links.map((link, index) => (
+                        <div className="url-item" key={link.href + index}>
+                          <div className="url-main">
+                            <strong>{link.text || "(no visible link text)"}</strong>
+                            <code>{link.href}</code>
+                            <span>{link.href_hostname ?? "Hostname not parsed"}</span>
+                          </div>
+                          <div className="url-flags">
+                            {link.destination_mismatch ? (
+                              <Flag text="Displayed URL mismatch" tone="bad" />
+                            ) : link.displayed_hostname ? (
+                              <Flag text="Displayed URL organization matches" tone="good" />
+                            ) : (
+                              <span className="flag">Link text is not a URL</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </section>
+                  )}
+                  <div className="url-list">
                   {result.urls.length ? (
                     result.urls.map((item, index) => (
                       <div className="url-item" key={item.url + index}>
@@ -394,7 +434,8 @@ export default function App() {
                   ) : (
                     <EmptyState text="No URLs were extracted." />
                   )}
-                </div>
+                  </div>
+                </>
               )}
 
               {activeTab === "evidence" && (

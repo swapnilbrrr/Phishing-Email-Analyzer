@@ -80,11 +80,27 @@ class RiskAssessment(BaseModel):
     rationale: str
 
 
+class AttachmentInfo(BaseModel):
+    filename: str | None = None
+    content_type: str
+    disposition: str | None = None
+    size_bytes: int | None = None
+
+
+class HtmlLinkIndicator(BaseModel):
+    href: str
+    text: str = ""
+    href_hostname: str | None = None
+    displayed_hostname: str | None = None
+    destination_mismatch: bool = False
+
+
 class EmailMetadata(BaseModel):
     subject: str | None = None
     date: str | None = None
     message_id: str | None = None
     content_types: list[str] = Field(default_factory=list)
+    attachments: list[AttachmentInfo] = Field(default_factory=list)
 
 
 class EmailAnalysis(BaseModel):
@@ -95,6 +111,7 @@ class EmailAnalysis(BaseModel):
     authentication: Authentication
     delivery: Delivery
     urls: list[UrlIndicator] = Field(default_factory=list)
+    html_links: list[HtmlLinkIndicator] = Field(default_factory=list)
     domains: list[str] = Field(default_factory=list)
     ips: list[str] = Field(default_factory=list)
     detections: list[Detection] = Field(default_factory=list)

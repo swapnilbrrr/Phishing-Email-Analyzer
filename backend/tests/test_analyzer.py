@@ -37,3 +37,21 @@ def test_benign_email_does_not_use_a_trust_discount():
     result = analyze(BENIGN)
     assert result.risk.score < 40
     assert not any(item.id == "IDENTITY-003" for item in result.detections)
+
+
+
+def test_html_visible_url_mismatch_creates_detection():
+    raw = """From: notifications@example.org
+Subject: Please review
+MIME-Version: 1.0
+Content-Type: text/html; charset="utf-8"
+
+<p>Continue to <a href="https://attacker.example/login">https://paypal.com/signin</a></p>
+"""
+    result = analyze(raw)
+
+    detection = next(item for item in result.detections if item.id == "URL-008")
+    assert detection.severity == "high"
+    assert any("paypal.com" in evidence for evidence in detection.evidence)
+    assert any("attacker.example" in evidence for evidence in detection.evidence)
+    assert result.html_links[0].destination_mismatch is True
