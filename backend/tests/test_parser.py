@@ -58,6 +58,7 @@ Body text.
         _return_path,
         auth,
         _delivery,
+        _html_links,
     ) = parse_email(raw)
 
     assert sender.domain == "victim.example"
@@ -84,6 +85,7 @@ Body text.
         _return_path,
         auth,
         _delivery,
+        _html_links,
     ) = parse_email(raw)
 
     assert auth.spf.result == "pass"
