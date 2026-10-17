@@ -72,13 +72,18 @@ def test_authentication_results_never_add_auth_detections_from_raw_email():
     assert not any(item.id in auth_detection_ids for item in result.detections)
 
 
-def test_forged_matching_authserv_id_cannot_change_risk_score():
-    forged = PHISHING.replace(
-        "Authentication-Results: mx.example;",
-        "Authentication-Results: trusted-gateway.example;",
-    )
-    result = analyze(forged)
-    auth_detection_ids = {"AUTH-001", "AUTH-002", "AUTH-003", "AUTH-004", "AUTH-005"}
 
-    assert result.authentication.trusted is False
-    assert not any(item.id in auth_detection_ids for item in result.detections)
+def test_authentication_result_changes_do_not_change_risk_score():
+    pass_claim = PHISHING.replace(
+        "Authentication-Results: mx.example; spf=fail smtp.mailfrom=paypa1-example.com; dkim=fail header.d=paypa1-example.com; dmarc=fail",
+        "Authentication-Results: mx.example; spf=pass smtp.mailfrom=paypa1-example.com; dkim=pass header.d=paypa1-example.com; dmarc=pass",
+    )
+    fail_result = analyze(PHISHING)
+    pass_result = analyze(pass_claim)
+
+    assert fail_result.authentication.spf.result == "fail"
+    assert pass_result.authentication.spf.result == "pass"
+    assert fail_result.authentication.trusted is False
+    assert pass_result.authentication.trusted is False
+    assert fail_result.risk.score == pass_result.risk.score
+    assert [item.id for item in fail_result.detections] == [item.id for item in pass_result.detections]
