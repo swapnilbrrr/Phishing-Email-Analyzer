@@ -1,8 +1,6 @@
 
 from __future__ import annotations
 
-import os
-
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -13,11 +11,6 @@ from .models import AnalysisRequest, EmailAnalysis, HealthResponse
 
 
 MAX_BODY_BYTES = 320_000
-TRUSTED_AUTHSERV_IDS = {
-    value.strip().casefold()
-    for value in os.getenv("PHISHING_ANALYZER_TRUSTED_AUTHSERV_IDS", "").split(",")
-    if value.strip()
-}
 
 app = FastAPI(
     title="Phishing Email Analysis Engine",
@@ -73,6 +66,6 @@ async def health() -> HealthResponse:
 @app.post("/api/v1/analyze", response_model=EmailAnalysis)
 async def analyze_email(payload: AnalysisRequest) -> EmailAnalysis:
     try:
-        return analyze(payload.raw_email, TRUSTED_AUTHSERV_IDS)
+        return analyze(payload.raw_email)
     except EmailStructureError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
