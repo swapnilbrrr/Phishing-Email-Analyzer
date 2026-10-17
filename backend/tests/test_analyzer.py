@@ -55,3 +55,18 @@ Content-Type: text/html; charset="utf-8"
     assert any("paypal.com" in evidence for evidence in detection.evidence)
     assert any("attacker.example" in evidence for evidence in detection.evidence)
     assert result.html_links[0].destination_mismatch is True
+
+
+
+def test_untrusted_authentication_results_do_not_add_auth_detections():
+    result = analyze(PHISHING)
+    auth_detection_ids = {"AUTH-001", "AUTH-002", "AUTH-003", "AUTH-004", "AUTH-005"}
+    assert result.authentication.trusted is False
+    assert not any(item.id in auth_detection_ids for item in result.detections)
+
+
+def test_configured_authentication_results_can_contribute_to_scoring():
+    result = analyze(PHISHING, trusted_authserv_ids={"mx.example"})
+    auth_detection_ids = {"AUTH-001", "AUTH-002", "AUTH-003"}
+    assert result.authentication.trusted is True
+    assert any(item.id in auth_detection_ids for item in result.detections)
