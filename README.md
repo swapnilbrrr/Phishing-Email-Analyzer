@@ -74,14 +74,7 @@ Requires Python 3.10+.
     pip install -r backend/requirements.txt
     .\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --reload --port 8000
 
-Configure trusted authentication results only for a receiver you control and whose mail flow removes or isolates sender-supplied Authentication-Results headers. Matching an authserv-id is an operator trust decision, not proof that a header is authentic. With no allowlist configured, Authentication-Results are displayed as reported but do not contribute authentication detections to the risk score.
-
-PowerShell example (replace `mx.your-mail-gateway.example` with the authserv-id used by your trusted receiving gateway before starting the backend):
-
-    $env:PHISHING_ANALYZER_TRUSTED_AUTHSERV_IDS="mx.your-mail-gateway.example"
-    .\\.venv\\Scripts\\python.exe -m uvicorn backend.app.main:app --reload --port 8000
-
-Separate multiple exact authserv-ids with commas. Do not add an authserv-id merely because it appears in the email being investigated.
+Authentication-Results headers are attacker-controlled when an analyst pastes or uploads a raw email. The analyzer displays parsed SPF/DKIM/DMARC values as reported for context, but never treats an `authserv-id` match as proof of provenance and never uses these header claims in risk scoring. A future trusted-ingestion integration would need to establish provenance outside the submitted message (for example, from a controlled mail gateway or verified message trace) before authentication results could affect scoring.
 
 API endpoints:
 
