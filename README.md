@@ -72,7 +72,7 @@ Requires Python 3.10+.
     python -m venv .venv
     .venv\Scripts\Activate.ps1
     pip install -r backend/requirements.txt
-    uvicorn backend.app.main:app --reload --port 8000
+    .\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --reload --port 8000
 
 Configure trusted authentication results only for a receiver you control and whose mail flow removes or isolates sender-supplied Authentication-Results headers. Matching an authserv-id is an operator trust decision, not proof that a header is authentic. With no allowlist configured, Authentication-Results are displayed as reported but do not contribute authentication detections to the risk score.
 
