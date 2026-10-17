@@ -361,9 +361,6 @@ export default function App() {
               {activeTab === "auth" && (
                 <Detail title="Authentication evidence">
                   <p className="auth-trust-note">{result.authentication.trust_note}</p>
-                  {result.authentication.trusted_authserv_ids.length > 0 && (
-                    <p className="auth-trust-note">Configured authserv-id match: {result.authentication.trusted_authserv_ids.join(", ")}</p>
-                  )}
                   <AuthEvidence label="SPF" signal={result.authentication.spf} />
                   <AuthEvidence label="DKIM" signal={result.authentication.dkim} />
                   <AuthEvidence label="DMARC" signal={result.authentication.dmarc} />
