@@ -136,29 +136,14 @@ def parse_received(values: list[str]) -> Delivery:
     return Delivery(hop_count=len(hops), received=hops, earliest_public_ip=earliest_public)
 
 
-def parse_authentication(
-    message: Message,
-    sender_domain: str | None,
-    trusted_authserv_ids: set[str] | None = None,
-) -> Authentication:
+def parse_authentication(message: Message, sender_domain: str | None) -> Authentication:
     values = header_values(message, "Authentication-Results")
-    configured_ids = {item.casefold().strip() for item in (trusted_authserv_ids or set()) if item.strip()}
 
-    def authserv_id(header: str) -> str | None:
-        first_clause = header.split(";", 1)[0].strip()
-        return first_clause.split()[0].casefold() if first_clause else None
-
-    header_ids = [authserv_id(value) for value in values]
-    trusted_indexes = [
-        index for index, identifier in enumerate(header_ids)
-        if identifier is not None and identifier in configured_ids
-    ]
-    trusted = bool(trusted_indexes)
-    selected_values = [values[index] for index in trusted_indexes] if trusted else values
-    matched_ids = sorted({header_ids[index] for index in trusted_indexes if header_ids[index]})
-
+    # Raw email headers are attacker-controlled. An authserv-id is just text
+    # supplied in the message and cannot establish who generated the result.
+    # Parse the values for analyst context, but never mark them as trusted here.
     def parse_one(name: str) -> AuthSignal:
-        for header in selected_values:
+        for header in values:
             for clause in header.split(";"):
                 result_match = AUTH_RESULT_RE[name].search(clause)
                 if not result_match:
@@ -182,18 +167,14 @@ def parse_authentication(
         dkim=parse_one("dkim"),
         dmarc=parse_one("dmarc"),
         source_headers=len(values),
-        trusted=trusted,
-        trusted_authserv_ids=matched_ids,
-        untrusted_header_count=len(values) - len(trusted_indexes),
+        trusted=False,
+        untrusted_header_count=len(values),
         trust_note=(
-            "At least one Authentication-Results authserv-id matched the configured allowlist. "
-            "This is an operator trust decision, not cryptographic proof of header authenticity."
-            if trusted
-            else "Authentication-Results values are untrusted by default and are displayed as reported, "
-            "but are excluded from risk scoring until a configured authserv-id matches."
+            "Authentication-Results are shown as reported for context only. "
+            "Raw email headers cannot prove who added them, so SPF/DKIM/DMARC "
+            "results do not contribute to risk scoring."
         ),
     )
-
 
 def _is_attachment(part: Message) -> bool:
     return part.get_content_disposition() == "attachment" or bool(part.get_filename())
@@ -366,7 +347,7 @@ def extract_urls(text: str) -> list[str]:
     return found
 
 
-def parse_email(raw_email: str, trusted_authserv_ids: set[str] | None = None):
+def parse_email(raw_email: str):
     raw_bytes = raw_email.encode("utf-8", errors="replace")
     message = BytesParser(policy=default).parsebytes(raw_bytes)
     parts = _bounded_parts(message)
@@ -391,7 +372,7 @@ def parse_email(raw_email: str, trusted_authserv_ids: set[str] | None = None):
         ],
     )
 
-    auth = parse_authentication(message, from_addr.domain, trusted_authserv_ids)
+    auth = parse_authentication(message, from_addr.domain)
     delivery = parse_received(header_values(message, "Received"))
     body = extract_body_text(parts)
     html_links = extract_html_links(parts)
