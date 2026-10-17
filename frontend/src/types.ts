@@ -40,6 +40,10 @@ export interface EmailAnalysis {
     dkim: AuthSignal;
     dmarc: AuthSignal;
     source_headers: number;
+    trusted: boolean;
+    trusted_authserv_ids: string[];
+    untrusted_header_count: number;
+    trust_note: string;
   };
   delivery: {
     hop_count: number;
