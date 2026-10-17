@@ -139,33 +139,27 @@ def parse_received(values: list[str]) -> Delivery:
 def parse_authentication(message: Message, sender_domain: str | None) -> Authentication:
     values = header_values(message, "Authentication-Results")
 
+    # Raw email headers are attacker-controlled. An authserv-id is just text
+    # supplied in the message and cannot establish who generated the result.
+    # Parse the values for analyst context, but never mark them as trusted here.
     def parse_one(name: str) -> AuthSignal:
-        # Keep result and method-specific properties within the same clause.
         for header in values:
             for clause in header.split(";"):
                 result_match = AUTH_RESULT_RE[name].search(clause)
                 if not result_match:
                     continue
-
                 if name == "spf":
                     domain_match = SPF_DOMAIN_RE.search(clause)
                 elif name == "dkim":
                     domain_match = DKIM_DOMAIN_RE.search(clause)
                 else:
                     domain_match = None
-
                 auth_domain = None
                 if domain_match:
                     candidate = domain_match.group(1).strip("()<>").strip(chr(34)).strip(chr(39))
                     auth_domain = normalize_domain(candidate)
-
                 aligned = same_organization(auth_domain, sender_domain) if auth_domain else None
-                return AuthSignal(
-                    result=result_match.group(1).lower(),
-                    domain=auth_domain,
-                    aligned=aligned,
-                )
-
+                return AuthSignal(result=result_match.group(1).lower(), domain=auth_domain, aligned=aligned)
         return AuthSignal(result="none")
 
     return Authentication(
@@ -173,8 +167,14 @@ def parse_authentication(message: Message, sender_domain: str | None) -> Authent
         dkim=parse_one("dkim"),
         dmarc=parse_one("dmarc"),
         source_headers=len(values),
+        trusted=False,
+        untrusted_header_count=len(values),
+        trust_note=(
+            "Authentication-Results are shown as reported for context only. "
+            "Raw email headers cannot prove who added them, so SPF/DKIM/DMARC "
+            "results do not contribute to risk scoring."
+        ),
     )
-
 
 def _is_attachment(part: Message) -> bool:
     return part.get_content_disposition() == "attachment" or bool(part.get_filename())

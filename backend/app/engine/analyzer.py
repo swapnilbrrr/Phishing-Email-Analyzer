@@ -74,50 +74,9 @@ def analyze(raw_email: str) -> EmailAnalysis:
 
     detections: list[Detection] = []
 
-    if authentication.spf.result == "fail":
-        detections.append(
-            make_detection(
-                "AUTH-001", "SPF failed", "authentication", "high", 0.94, 15,
-                "Authentication-Results reports SPF=fail.",
-                f"Envelope sender domain: {authentication.spf.domain}"
-                if authentication.spf.domain else "",
-            )
-        )
-
-    if authentication.dkim.result == "fail":
-        detections.append(
-            make_detection(
-                "AUTH-002", "DKIM failed", "authentication", "high", 0.93, 15,
-                "Authentication-Results reports DKIM=fail.",
-            )
-        )
-
-    if authentication.dmarc.result == "fail":
-        detections.append(
-            make_detection(
-                "AUTH-003", "DMARC failed", "authentication", "high", 0.97, 25,
-                "Authentication-Results reports DMARC=fail.",
-                "DMARC failure is a strong identity-integrity signal, not proof of phishing by itself.",
-            )
-        )
-
-    if authentication.spf.aligned is False:
-        detections.append(
-            make_detection(
-                "AUTH-004", "SPF identity is not aligned", "authentication",
-                "medium", 0.88, 10,
-                "The SMTP MAIL FROM organization differs from the visible From organization.",
-            )
-        )
-
-    if authentication.dkim.aligned is False:
-        detections.append(
-            make_detection(
-                "AUTH-005", "DKIM identity is not aligned", "authentication",
-                "medium", 0.88, 10,
-                "The DKIM signing domain differs from the visible From organization.",
-            )
-        )
+    # Authentication-Results are displayed as unverified context only.
+    # They must not create detections or contribute to scoring when provenance
+    # cannot be established from outside the submitted raw message.
 
     if sender.domain and reply_to.domain and sender.domain != reply_to.domain:
         detections.append(
@@ -351,7 +310,6 @@ def analyze(raw_email: str) -> EmailAnalysis:
         and (
             "IDENTITY-003" in detection_ids
             or "IDENTITY-004" in detection_ids
-            or "AUTH-003" in detection_ids
         )
     ):
         detections.append(
