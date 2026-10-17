@@ -55,7 +55,7 @@ def make_detection(
     )
 
 
-def analyze(raw_email: str) -> EmailAnalysis:
+def analyze(raw_email: str, trusted_authserv_ids: set[str] | None = None) -> EmailAnalysis:
     (
         _message,
         body,
@@ -66,7 +66,7 @@ def analyze(raw_email: str) -> EmailAnalysis:
         authentication,
         delivery,
         html_links,
-    ) = parse_email(raw_email)
+    ) = parse_email(raw_email, trusted_authserv_ids)
 
     combined = " ".join(
         value for value in [metadata.subject or "", body] if value
@@ -74,7 +74,7 @@ def analyze(raw_email: str) -> EmailAnalysis:
 
     detections: list[Detection] = []
 
-    if authentication.spf.result == "fail":
+    if authentication.trusted and authentication.spf.result == "fail":
         detections.append(
             make_detection(
                 "AUTH-001", "SPF failed", "authentication", "high", 0.94, 15,
@@ -84,7 +84,7 @@ def analyze(raw_email: str) -> EmailAnalysis:
             )
         )
 
-    if authentication.dkim.result == "fail":
+    if authentication.trusted and authentication.dkim.result == "fail":
         detections.append(
             make_detection(
                 "AUTH-002", "DKIM failed", "authentication", "high", 0.93, 15,
@@ -92,7 +92,7 @@ def analyze(raw_email: str) -> EmailAnalysis:
             )
         )
 
-    if authentication.dmarc.result == "fail":
+    if authentication.trusted and authentication.dmarc.result == "fail":
         detections.append(
             make_detection(
                 "AUTH-003", "DMARC failed", "authentication", "high", 0.97, 25,
@@ -101,7 +101,7 @@ def analyze(raw_email: str) -> EmailAnalysis:
             )
         )
 
-    if authentication.spf.aligned is False:
+    if authentication.trusted and authentication.spf.aligned is False:
         detections.append(
             make_detection(
                 "AUTH-004", "SPF identity is not aligned", "authentication",
@@ -110,7 +110,7 @@ def analyze(raw_email: str) -> EmailAnalysis:
             )
         )
 
-    if authentication.dkim.aligned is False:
+    if authentication.trusted and authentication.dkim.aligned is False:
         detections.append(
             make_detection(
                 "AUTH-005", "DKIM identity is not aligned", "authentication",
