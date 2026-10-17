@@ -55,7 +55,7 @@ def make_detection(
     )
 
 
-def analyze(raw_email: str, trusted_authserv_ids: set[str] | None = None) -> EmailAnalysis:
+def analyze(raw_email: str) -> EmailAnalysis:
     (
         _message,
         body,
@@ -66,7 +66,7 @@ def analyze(raw_email: str, trusted_authserv_ids: set[str] | None = None) -> Ema
         authentication,
         delivery,
         html_links,
-    ) = parse_email(raw_email, trusted_authserv_ids)
+    ) = parse_email(raw_email)
 
     combined = " ".join(
         value for value in [metadata.subject or "", body] if value
@@ -74,6 +74,8 @@ def analyze(raw_email: str, trusted_authserv_ids: set[str] | None = None) -> Ema
 
     detections: list[Detection] = []
 
+    # Authentication-Results are parsed for display, but raw headers do not
+    # provide trustworthy provenance and therefore never affect the risk score.
     if authentication.trusted and authentication.spf.result == "fail":
         detections.append(
             make_detection(
