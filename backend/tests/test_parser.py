@@ -198,3 +198,33 @@ nested body
         assert "nesting" in str(exc)
     else:
         raise AssertionError("Expected MIME depth limit to reject the message")
+
+
+
+def test_authentication_results_are_untrusted_by_default():
+    raw = """From: sender@victim.example
+Authentication-Results: mx.receiver; spf=fail; dkim=fail; dmarc=fail
+
+Body text.
+"""
+    auth = parse_email(raw)[6]
+    assert auth.trusted is False
+    assert auth.trusted_authserv_ids == []
+    assert auth.untrusted_header_count == 1
+    assert auth.spf.result == "fail"
+
+
+def test_authentication_results_only_trust_configured_authserv_id():
+    raw = """From: sender@victim.example
+Authentication-Results: attacker.example; spf=fail; dkim=fail; dmarc=fail
+Authentication-Results: mx.receiver; spf=pass smtp.mailfrom=victim.example; dkim=pass header.d=victim.example; dmarc=pass header.from=victim.example
+
+Body text.
+"""
+    auth = parse_email(raw, trusted_authserv_ids={"MX.RECEIVER"})[6]
+    assert auth.trusted is True
+    assert auth.trusted_authserv_ids == ["mx.receiver"]
+    assert auth.untrusted_header_count == 1
+    assert auth.spf.result == "pass"
+    assert auth.dkim.result == "pass"
+    assert auth.dmarc.result == "pass"
