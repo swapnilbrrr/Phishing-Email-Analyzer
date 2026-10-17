@@ -58,15 +58,27 @@ Content-Type: text/html; charset="utf-8"
 
 
 
-def test_untrusted_authentication_results_do_not_add_auth_detections():
-    result = analyze(PHISHING)
+
+def test_authentication_results_never_add_auth_detections_from_raw_email():
+    forged = PHISHING.replace(
+        "Authentication-Results: mx.example;",
+        "Authentication-Results: mx.receiver;",
+    )
+    result = analyze(forged)
     auth_detection_ids = {"AUTH-001", "AUTH-002", "AUTH-003", "AUTH-004", "AUTH-005"}
+
     assert result.authentication.trusted is False
+    assert result.authentication.spf.result == "fail"
     assert not any(item.id in auth_detection_ids for item in result.detections)
 
 
-def test_configured_authentication_results_can_contribute_to_scoring():
-    result = analyze(PHISHING, trusted_authserv_ids={"mx.example"})
-    auth_detection_ids = {"AUTH-001", "AUTH-002", "AUTH-003"}
-    assert result.authentication.trusted is True
-    assert any(item.id in auth_detection_ids for item in result.detections)
+def test_forged_matching_authserv_id_cannot_change_risk_score():
+    forged = PHISHING.replace(
+        "Authentication-Results: mx.example;",
+        "Authentication-Results: trusted-gateway.example;",
+    )
+    result = analyze(forged)
+    auth_detection_ids = {"AUTH-001", "AUTH-002", "AUTH-003", "AUTH-004", "AUTH-005"}
+
+    assert result.authentication.trusted is False
+    assert not any(item.id in auth_detection_ids for item in result.detections)
