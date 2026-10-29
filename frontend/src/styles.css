@@ -1039,6 +1039,7 @@ textarea,
 }
 
 /* Stage 1: responsive navigation shell and theme tokens. */
+.app-shell{min-height:100vh;background:var(--bg);color:var(--text)}
 .app-shell[data-theme="light"]{color-scheme:light;--bg:#f3f6fa;--panel:#fff;--panel-2:#f7f9fc;--line:#dce3ec;--line-soft:#e9eef4;--text:#182230;--muted:#596779;--subtle:#78879a;--accent:#245fa8;--accent-strong:#1d4f91;--green:#167647;--amber:#94620a;--red:#b4232f;--red-bg:rgba(180,35,47,.07);--amber-bg:rgba(148,98,10,.07);--green-bg:rgba(22,118,71,.07)}
 .app-shell[data-theme="light"] .topbar{background:rgba(255,255,255,.94);border-bottom-color:var(--line)}
 .app-shell[data-theme="light"] .mark{background:#e8f0fb}.app-shell[data-theme="light"] .mark span{background:var(--accent)}
