@@ -19,6 +19,21 @@ const SAMPLE_EMAIL = [
 
 type Tab = "overview" | "auth" | "delivery" | "urls" | "evidence";
 
+async function requestAnalysis(rawEmail: string): Promise<EmailAnalysis> {
+  const response = await fetch("/api/v1/analyze", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ raw_email: rawEmail })
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new Error(body?.detail ?? body?.error ?? ("Analysis failed (" + response.status + ")."));
+  }
+
+  return (await response.json()) as EmailAnalysis;
+}
+
 const verdictCopy: Record<Verdict, { label: string; description: string }> = {
   low_risk: {
     label: "Low risk",
@@ -41,11 +56,28 @@ export default function App() {
   const [status, setStatus] = useState("Ready for analysis.");
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [compareMode, setCompareMode] = useState(false);
+  const [comparisonEmail, setComparisonEmail] = useState("");
+  const [comparison, setComparison] = useState<{ left: EmailAnalysis; right: EmailAnalysis } | null>(null);
+  const [compareBusy, setCompareBusy] = useState(false);
+  const [compareError, setCompareError] = useState("");
 
   const topDetections = useMemo(
     () => result?.detections.slice(0, 3) ?? [],
     [result]
   );
+
+  const comparisonSummary = useMemo(() => {
+    if (!comparison) return null;
+    const leftIds = new Set(comparison.left.detections.map((item) => item.id));
+    const rightIds = new Set(comparison.right.detections.map((item) => item.id));
+    return {
+      shared: comparison.left.detections.filter((item) => rightIds.has(item.id)),
+      leftOnly: comparison.left.detections.filter((item) => !rightIds.has(item.id)),
+      rightOnly: comparison.right.detections.filter((item) => !leftIds.has(item.id)),
+      scoreDelta: comparison.right.risk.score - comparison.left.risk.score
+    };
+  }, [comparison]);
 
   async function analyzeEmail() {
     const payload = rawEmail.trim();
@@ -89,6 +121,38 @@ export default function App() {
     }
   }
 
+  async function compareEmails() {
+    const left = rawEmail.trim();
+    const right = comparisonEmail.trim();
+
+    if (!left || !right) {
+      setCompareError("Provide both email messages before comparing.");
+      return;
+    }
+    if (new Blob([left]).size > 300_000 || new Blob([right]).size > 300_000) {
+      setCompareError("Each email must be 300 KB or smaller.");
+      return;
+    }
+
+    setCompareBusy(true);
+    setComparison(null);
+    setCompareError("");
+    setStatus("Analyzing both emails independently…");
+    try {
+      const [leftResult, rightResult] = await Promise.all([
+        requestAnalysis(left),
+        requestAnalysis(right)
+      ]);
+      setComparison({ left: leftResult, right: rightResult });
+      setStatus("Comparison complete.");
+    } catch (cause) {
+      setCompareError(cause instanceof Error ? cause.message : "Comparison could not be completed.");
+      setStatus("Comparison could not be completed.");
+    } finally {
+      setCompareBusy(false);
+    }
+  }
+
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
       event.preventDefault();
@@ -99,7 +163,9 @@ export default function App() {
   function loadSample() {
     setRawEmail(SAMPLE_EMAIL);
     setResult(null);
+    setComparison(null);
     setError("");
+    setCompareError("");
     setStatus("Sample loaded. Analyze it when ready.");
   }
 
@@ -116,7 +182,9 @@ export default function App() {
 
     setRawEmail(await file.text());
     setResult(null);
+    setComparison(null);
     setError("");
+    setCompareError("");
     setStatus("Loaded " + file.name + ". Analyze it when ready.");
   }
 
@@ -159,7 +227,43 @@ export default function App() {
           </p>
         </section>
 
-        <section className="input-panel" aria-labelledby="input-heading">
+        <div className="mode-switch" role="group" aria-label="Analysis mode">
+          <button type="button" className={!compareMode ? "mode-button active" : "mode-button"} onClick={() => setCompareMode(false)}>Single analysis</button>
+          <button type="button" className={compareMode ? "mode-button active" : "mode-button"} onClick={() => setCompareMode(true)}>Compare two emails</button>
+        </div>
+
+        {compareMode && (
+          <section className="compare-panel" aria-labelledby="compare-heading">
+            <div className="section-heading">
+              <div>
+                <p className="section-kicker">01 · COMPARISON INPUT</p>
+                <h2 id="compare-heading">Compare two messages</h2>
+              </div>
+              <button className="ghost-button" type="button" onClick={loadSample} disabled={compareBusy}>Load sample into A</button>
+            </div>
+            <p className="compare-intro">Both messages are sent through the same local analysis endpoint independently. Comparison highlights differences; it does not establish that either message is safe or malicious by itself.</p>
+            <div className="compare-input-grid">
+              <label className="compare-input">
+                <span>Email A <small>Baseline</small></span>
+                <textarea value={rawEmail} disabled={compareBusy} onChange={(event) => { setRawEmail(event.target.value); setResult(null); setComparison(null); setCompareError(""); }} placeholder="Paste the first raw email here…" spellCheck={false} />
+                <small>{rawEmail.length.toLocaleString()} characters</small>
+              </label>
+              <label className="compare-input">
+                <span>Email B <small>Message to compare</small></span>
+                <textarea value={comparisonEmail} disabled={compareBusy} onChange={(event) => { setComparisonEmail(event.target.value); setComparison(null); setCompareError(""); }} placeholder="Paste the second raw email here…" spellCheck={false} />
+                <small>{comparisonEmail.length.toLocaleString()} characters</small>
+              </label>
+            </div>
+            <div className="compare-actions">
+              <button className="ghost-button" type="button" onClick={() => { setComparisonEmail(rawEmail); setComparison(null); setCompareError(""); }} disabled={compareBusy || !rawEmail.trim()}>Copy A to B</button>
+              <button className="primary-button" type="button" onClick={() => void compareEmails()} disabled={compareBusy || !rawEmail.trim() || !comparisonEmail.trim()}>{compareBusy ? "Comparing…" : "Compare emails"} {!compareBusy && <span aria-hidden="true">→</span>}</button>
+            </div>
+            {compareError && <div className="inline-error" role="alert">{compareError}</div>}
+            <div className="status-line" aria-live="polite"><span className={compareBusy ? "status-dot pulse" : "status-dot"} />{compareBusy ? "Analyzing both messages…" : comparison ? "Comparison ready." : "Ready to compare."}</div>
+          </section>
+        )}
+
+        {!compareMode && <section className="input-panel" aria-labelledby="input-heading">
           <div className="section-heading">
             <div>
               <p className="section-kicker">01 · INPUT</p>
@@ -206,6 +310,8 @@ export default function App() {
             onChange={(event) => {
               setRawEmail(event.target.value);
               if (result) setResult(null);
+              setComparison(null);
+              setCompareError("");
               if (error) setError("");
               setStatus("Input changed. Analyze again to refresh findings.");
             }}
@@ -240,9 +346,9 @@ export default function App() {
             <span className={busy ? "status-dot pulse" : "status-dot"} />
             {status}
           </div>
-        </section>
+        </section>}
 
-        {result && (
+        {!compareMode && result && (
           <section className="results" aria-labelledby="findings-heading">
             <div className="result-header">
               <div>
@@ -476,6 +582,57 @@ export default function App() {
                 </div>
               )}
             </div>
+          </section>
+        )}
+
+        {compareMode && comparison && comparisonSummary && (
+          <section className="compare-results" aria-labelledby="comparison-results-heading">
+            <div className="result-header">
+              <div>
+                <p className="section-kicker">02 · COMPARISON RESULTS</p>
+                <h2 id="comparison-results-heading">What changed?</h2>
+              </div>
+              <span className="compare-delta">{comparisonSummary.scoreDelta === 0 ? "Same risk score" : comparisonSummary.scoreDelta > 0 ? "Email B scores " + comparisonSummary.scoreDelta + " points higher" : "Email B scores " + Math.abs(comparisonSummary.scoreDelta) + " points lower"}</span>
+            </div>
+
+            <div className="compare-score-grid">
+              <article className={"compare-score-card risk-" + comparison.left.risk.verdict}>
+                <span className="metric-label">Email A · baseline</span>
+                <div className="compare-score-number">{comparison.left.risk.score}<small>/100</small></div>
+                <span className={"verdict-pill verdict-" + comparison.left.risk.verdict}>{verdictCopy[comparison.left.risk.verdict].label}</span>
+                <p>{comparison.left.metadata.subject ?? "No subject"}</p>
+                <small>{comparison.left.sender.address ?? "Visible sender not found"}</small>
+              </article>
+              <article className={"compare-score-card risk-" + comparison.right.risk.verdict}>
+                <span className="metric-label">Email B · comparison</span>
+                <div className="compare-score-number">{comparison.right.risk.score}<small>/100</small></div>
+                <span className={"verdict-pill verdict-" + comparison.right.risk.verdict}>{verdictCopy[comparison.right.risk.verdict].label}</span>
+                <p>{comparison.right.metadata.subject ?? "No subject"}</p>
+                <small>{comparison.right.sender.address ?? "Visible sender not found"}</small>
+              </article>
+            </div>
+
+            <Detail title="Message differences" wide>
+              <DataRow label="Visible From (A)" value={comparison.left.sender.address ?? "Not found"} />
+              <DataRow label="Visible From (B)" value={comparison.right.sender.address ?? "Not found"} />
+              <DataRow label="Return-Path (A)" value={comparison.left.return_path.address ?? "Not present"} />
+              <DataRow label="Return-Path (B)" value={comparison.right.return_path.address ?? "Not present"} />
+              <DataRow label="URLs (A / B)" value={comparison.left.urls.length + " / " + comparison.right.urls.length} />
+              <DataRow label="Attachments (A / B)" value={comparison.left.metadata.attachments.length + " / " + comparison.right.metadata.attachments.length} />
+            </Detail>
+
+            <div className="compare-detection-grid">
+              <Detail title={"Signals in both (" + comparisonSummary.shared.length + ")"}>
+                {comparisonSummary.shared.length ? comparisonSummary.shared.map((item) => <div className="compare-detection" key={item.id}><strong>{item.name}</strong><small>{item.id}</small></div>) : <EmptyState text="No matching detection IDs were found in both messages." />}
+              </Detail>
+              <Detail title={"Only in A (" + comparisonSummary.leftOnly.length + ")"}>
+                {comparisonSummary.leftOnly.length ? comparisonSummary.leftOnly.map((item) => <div className="compare-detection" key={item.id}><strong>{item.name}</strong><small>{item.id}</small></div>) : <EmptyState text="No detections unique to Email A." />}
+              </Detail>
+              <Detail title={"Only in B (" + comparisonSummary.rightOnly.length + ")"}>
+                {comparisonSummary.rightOnly.length ? comparisonSummary.rightOnly.map((item) => <div className="compare-detection" key={item.id}><strong>{item.name}</strong><small>{item.id}</small></div>) : <EmptyState text="No detections unique to Email B." />}
+              </Detail>
+            </div>
+            <p className="compare-caveat">Detection IDs are compared as engine outputs, not proof of shared campaign or common authorship. Risk scores are heuristic indicators and should be interpreted alongside the underlying evidence.</p>
           </section>
         )}
 
