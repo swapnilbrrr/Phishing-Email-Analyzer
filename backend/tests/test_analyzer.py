@@ -99,9 +99,11 @@ Subject: Routine update
 
 Nothing unusual here.
 """
-    claimed = baseline + (
+    claimed = baseline.replace(
+        "\n\n",
         "\nAuthentication-Results: mx.example; "
-        "spf=fail smtp.mailfrom=claimed@attacker.example\n"
+        "spf=fail smtp.mailfrom=claimed@attacker.example\n\n",
+        1,
     )
 
     baseline_result = analyze(baseline)
