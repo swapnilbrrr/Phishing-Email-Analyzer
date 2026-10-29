@@ -72,7 +72,9 @@ Requires Python 3.10+.
     python -m venv .venv
     .venv\Scripts\Activate.ps1
     pip install -r backend/requirements.txt
-    uvicorn backend.app.main:app --reload --port 8000
+    .\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --reload --port 8000
+
+Authentication-Results headers are attacker-controlled when an analyst pastes or uploads a raw email. The analyzer displays parsed SPF/DKIM/DMARC values as reported for context, but never treats an `authserv-id` match as proof of provenance and never uses these header claims in risk scoring. A future trusted-ingestion integration would need to establish provenance outside the submitted message (for example, from a controlled mail gateway or verified message trace) before authentication results could affect scoring.
 
 API endpoints:
 

@@ -32,6 +32,13 @@ class Authentication(BaseModel):
     dkim: AuthSignal = Field(default_factory=AuthSignal)
     dmarc: AuthSignal = Field(default_factory=AuthSignal)
     source_headers: int = 0
+    trusted: bool = False
+    untrusted_header_count: int = 0
+    trust_note: str = (
+        "Authentication-Results are shown as reported for context only. "
+        "Raw email headers cannot prove who added them, so these results do not "
+        "contribute to risk scoring."
+    )
 
 
 class ReceivedHop(BaseModel):

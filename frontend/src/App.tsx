@@ -321,6 +321,7 @@ export default function App() {
               {activeTab === "overview" && (
                 <div className="detail-grid">
                   <Detail title="Authentication">
+                    <p className="auth-trust-note">{result.authentication.trust_note}</p>
                     <AuthRow label="SPF" result={result.authentication.spf.result} />
                     <AuthRow label="DKIM" result={result.authentication.dkim.result} />
                     <AuthRow label="DMARC" result={result.authentication.dmarc.result} />
@@ -359,6 +360,7 @@ export default function App() {
 
               {activeTab === "auth" && (
                 <Detail title="Authentication evidence">
+                  <p className="auth-trust-note">{result.authentication.trust_note}</p>
                   <AuthEvidence label="SPF" signal={result.authentication.spf} />
                   <AuthEvidence label="DKIM" signal={result.authentication.dkim} />
                   <AuthEvidence label="DMARC" signal={result.authentication.dmarc} />
