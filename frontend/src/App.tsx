@@ -1,6 +1,6 @@
 
 import type { DragEvent, KeyboardEvent, ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { EmailAnalysis, Verdict } from "./types";
 
 const SAMPLE_EMAIL = [
@@ -41,6 +41,12 @@ export default function App() {
   const [status, setStatus] = useState("Ready for analysis.");
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [activePage, setActivePage] = useState<"analysis" | "engine">("analysis");
+  const [collapsed, setCollapsed] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">(() => { try { return localStorage.getItem("veritas-theme") === "light" ? "light" : "dark"; } catch { return "dark"; } });
+  const [health, setHealth] = useState<{status:string;engine_version?:string} | null>(null);
+  useEffect(() => { try { localStorage.setItem("veritas-theme", theme); } catch {} }, [theme]);
+  useEffect(() => { if (activePage !== "engine") return; let live = true; setHealth(null); fetch("/health").then(r => { if (!r.ok) throw new Error(); return r.json(); }).then(d => { if (live) setHealth(d); }).catch(() => { if (live) setHealth({status:"offline"}); }); return () => { live = false; }; }, [activePage]);
 
   const topDetections = useMemo(
     () => result?.detections.slice(0, 3) ?? [],
@@ -128,7 +134,7 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-theme={theme}>
       <header className="topbar">
         <div className="brand-lockup">
           <div className="mark" aria-hidden="true">
@@ -142,13 +148,21 @@ export default function App() {
           </div>
         </div>
 
-        <div className="system-status">
-          <span className="status-dot" aria-hidden="true" />
-          Local-first
+        <div className="topbar-actions">
+          <span className="topbar-label">EMAIL SECURITY WORKSPACE</span>
+          <button className="theme-toggle" onClick={() => setTheme(t => t === "dark" ? "light" : "dark")} type="button">{theme === "dark" ? "☼ Light mode" : "☾ Dark mode"}</button>
         </div>
       </header>
 
-      <main className="workspace">
+      <div className={collapsed ? "app-body sidebar-collapsed" : "app-body"}>
+        <aside className="sidebar" aria-label="Main navigation">
+          <button className="sidebar-collapse" onClick={() => setCollapsed(v => !v)} type="button" aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>{collapsed ? "»" : "«"}{!collapsed && " Collapse"}</button>
+          <p className="nav-section-label">{!collapsed && "WORKSPACE"}</p>
+          <button className={activePage === "analysis" ? "nav-item active" : "nav-item"} onClick={() => setActivePage("analysis")} type="button" title="Analyze email"><span className="nav-icon">⌕</span>{!collapsed && "Analyze email"}</button>
+          <button className={activePage === "engine" ? "nav-item active" : "nav-item"} onClick={() => setActivePage("engine")} type="button" title="Engine status"><span className="nav-icon">◉</span>{!collapsed && "Engine status"}</button>
+        </aside>
+        <main className="workspace">
+          {activePage === "analysis" ? (<>
         <section className="hero">
           <p className="eyebrow">EMAIL THREAT ANALYSIS</p>
           <h1>Find the evidence behind the verdict.</h1>
@@ -471,11 +485,18 @@ export default function App() {
           </section>
         )}
 
-        <footer className="footer">
-          <span>Offline analysis by default · external URLs are never fetched</span>
-          <span>Phishing Email Analyzer</span>
-        </footer>
-      </main>
+        <footer className="footer"><span>Analysis runs locally · external URLs are never fetched</span><span>Veritas · Phishing Email Analyzer</span></footer>
+          </>) : (
+            <section className="engine-page">
+              <p className="section-kicker">SYSTEM · HEALTH</p><h1>Analysis engine</h1>
+              <p className="engine-page-copy">Live API health check. Service availability does not measure detection accuracy.</p>
+              <div className="engine-status-card"><span className={"engine-status-indicator " + (health?.status === "ok" ? "online" : health ? "offline" : "checking")} /><div><strong>{!health ? "Checking API…" : health.status === "ok" ? "Engine online" : "Engine unavailable"}</strong><p>{!health ? "Contacting the local health endpoint." : health.status === "ok" ? "The API health endpoint responded successfully." : "Start the backend in the other terminal and refresh this page."}</p></div></div>
+              <div className="engine-details-grid"><div className="engine-detail"><span>Health endpoint</span><strong>/health</strong></div><div className="engine-detail"><span>Engine version</span><strong>{health?.engine_version ?? "—"}</strong></div><div className="engine-detail"><span>Analysis endpoint</span><strong>/api/v1/analyze</strong></div><div className="engine-detail"><span>URL fetching</span><strong>Disabled</strong></div></div>
+              <button className="primary-button engine-back-button" onClick={() => setActivePage("analysis")} type="button">Back to email analysis →</button>
+            </section>
+          )}
+        </main>
+      </div>
     </div>
   );
 }
