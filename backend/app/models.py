@@ -31,6 +31,9 @@ class Authentication(BaseModel):
     spf: AuthSignal = Field(default_factory=AuthSignal)
     dkim: AuthSignal = Field(default_factory=AuthSignal)
     dmarc: AuthSignal = Field(default_factory=AuthSignal)
+    # MAIL FROM values are extracted from attacker-controlled Authentication-Results
+    # headers and are presented only as unverified claims.
+    smtp_mail_from_claims: list[str] = Field(default_factory=list)
     source_headers: int = 0
     trusted: bool = False
     untrusted_header_count: int = 0

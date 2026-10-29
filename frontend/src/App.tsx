@@ -271,12 +271,16 @@ export default function App() {
               </div>
 
               <div className="identity-card">
-                <span className="metric-label">Sender identity</span>
+                <span className="metric-label">Visible sender · P2</span>
                 <strong>{result.sender.address ?? "Not found"}</strong>
                 <span>{result.metadata.subject ?? "No subject"}</span>
                 <div className="identity-row">
                   <span>Reply-To</span>
                   <b>{result.reply_to.address ?? "Not present"}</b>
+                </div>
+                <div className="identity-row">
+                  <span>Return-Path</span>
+                  <b>{result.return_path.address ?? "Not present"}</b>
                 </div>
               </div>
 
@@ -334,10 +338,14 @@ export default function App() {
                     <DataRow label="URLs" value={String(result.urls.length)} />
                   </Detail>
 
-                  <Detail title="Identity checks" wide>
-                    <DataRow label="From" value={result.sender.address ?? "Not found"} />
-                    <DataRow label="Reply-To" value={result.reply_to.address ?? "Not present"} />
-                    <DataRow label="Return-Path" value={result.return_path.address ?? "Not present"} />
+                  <Detail title="Sender identity · P1 vs P2" wide>
+                    <p className="identity-trust-note">
+                      From (P2) is the address shown to the recipient. SMTP MAIL FROM (P1) is the envelope sender used during transport, but this raw message only exposes unverified claims from Authentication-Results. Return-Path is a recorded message header and is not proof of the original SMTP transaction.
+                    </p>
+                    <DataRow label="From · visible sender (P2)" value={result.sender.address ?? "Not found"} />
+                    <DataRow label="Reported SMTP MAIL FROM · unverified (P1 claim)" value={result.authentication.smtp_mail_from_claims.length ? result.authentication.smtp_mail_from_claims.join(", ") : "Not reported in Authentication-Results"} />
+                    <DataRow label="Return-Path · recorded header" value={result.return_path.address ?? "Not present"} />
+                    <DataRow label="Reply-To · reply destination" value={result.reply_to.address ?? "Not present"} />
                   </Detail>
 
                   <Detail title="Attachments" wide>

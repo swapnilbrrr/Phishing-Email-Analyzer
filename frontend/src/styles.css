@@ -1037,3 +1037,16 @@ textarea,
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* Stage 2: make the sender-provenance caveat easy to distinguish from findings. */
+.identity-trust-note {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+}

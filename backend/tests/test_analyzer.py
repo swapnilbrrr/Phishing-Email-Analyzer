@@ -73,6 +73,51 @@ def test_authentication_results_never_add_auth_detections_from_raw_email():
 
 
 
+def test_reported_smtp_mailfrom_is_separate_untrusted_context():
+    raw = """From: display@example.org
+Return-Path: <bounce@delivery.example>
+Authentication-Results: mx.example; spf=pass smtp.mailfrom=<envelope@sender.example>
+Authentication-Results: another.example; spf=pass smtp.mailfrom=second@sender.example
+
+A routine message.
+"""
+    result = analyze(raw)
+
+    assert result.sender.address == "display@example.org"
+    assert result.return_path.address == "bounce@delivery.example"
+    assert result.authentication.smtp_mail_from_claims == [
+        "envelope@sender.example",
+        "second@sender.example",
+    ]
+    assert result.authentication.trusted is False
+    assert result.authentication.untrusted_header_count == 2
+
+
+def test_reported_smtp_mailfrom_claim_does_not_change_risk_score():
+    baseline = """From: sender@example.org
+Subject: Routine update
+
+Nothing unusual here.
+"""
+    claimed = baseline.replace(
+        "\n\n",
+        "\nAuthentication-Results: mx.example; "
+        "spf=fail smtp.mailfrom=claimed@attacker.example\n\n",
+        1,
+    )
+
+    baseline_result = analyze(baseline)
+    claimed_result = analyze(claimed)
+
+    assert claimed_result.authentication.smtp_mail_from_claims == [
+        "claimed@attacker.example"
+    ]
+    assert claimed_result.risk.score == baseline_result.risk.score
+    assert [item.id for item in claimed_result.detections] == [
+        item.id for item in baseline_result.detections
+    ]
+
+
 def test_authentication_result_changes_do_not_change_risk_score():
     pass_claim = PHISHING.replace(
         "Authentication-Results: mx.example; spf=fail smtp.mailfrom=paypa1-example.com; dkim=fail header.d=paypa1-example.com; dmarc=fail",
