@@ -245,7 +245,7 @@ export default function App() {
             <div className="compare-input-grid">
               <label className="compare-input">
                 <span>Email A <small>Baseline</small></span>
-                <textarea value={rawEmail} disabled={compareBusy} onChange={(event) => { setRawEmail(event.target.value); setComparison(null); setCompareError(""); }} placeholder="Paste the first raw email here…" spellCheck={false} />
+                <textarea value={rawEmail} disabled={compareBusy} onChange={(event) => { setRawEmail(event.target.value); setResult(null); setComparison(null); setCompareError(""); }} placeholder="Paste the first raw email here…" spellCheck={false} />
                 <small>{rawEmail.length.toLocaleString()} characters</small>
               </label>
               <label className="compare-input">
@@ -310,6 +310,8 @@ export default function App() {
             onChange={(event) => {
               setRawEmail(event.target.value);
               if (result) setResult(null);
+              setComparison(null);
+              setCompareError("");
               if (error) setError("");
               setStatus("Input changed. Analyze again to refresh findings.");
             }}
