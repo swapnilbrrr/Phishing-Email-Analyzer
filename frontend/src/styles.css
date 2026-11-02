@@ -1068,3 +1068,16 @@ textarea,
 .engine-detail span{color:var(--muted);font-size:11px}.engine-detail strong{font-size:13px;overflow-wrap:anywhere}.engine-back-button{margin-top:22px}
 @media(max-width:760px){.app-body,.app-body.sidebar-collapsed{grid-template-columns:58px minmax(0,1fr)}.sidebar{padding:14px 6px}.sidebar-collapse{align-self:center;padding:7px}.nav-section-label{padding:0}.nav-item{justify-content:center;padding:10px 4px}.workspace{width:calc(100% - 28px);padding-top:32px}.engine-page{width:calc(100% - 28px);padding-top:36px}.topbar{padding:12px 14px}.topbar-label{display:none}.theme-toggle{padding:8px}.engine-details-grid{grid-template-columns:1fr}}
 @media(max-width:440px){.brand{font-size:11px}.brand-caption{font-size:8px}.topbar-actions{gap:6px}.engine-status-card{align-items:flex-start;padding:15px;flex-wrap:wrap}}
+
+
+/* Stage 2: make the sender-provenance caveat easy to distinguish from findings. */
+.identity-trust-note {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
