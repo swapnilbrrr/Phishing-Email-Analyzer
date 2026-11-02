@@ -31,6 +31,10 @@ AUTH_RESULT_RE = {
     "dmarc": re.compile(r"\bdmarc=(pass|fail|bestguesspass|none|temperror|permerror)\b", re.I),
 }
 SPF_DOMAIN_RE = re.compile(r"\bsmtp\.mailfrom=([^\s;]+)", re.I)
+SMTP_MAILFROM_RE = re.compile(
+    r"""\bsmtp\.mailfrom\s*=\s*(<[^>]*>|"[^"]*"|'[^']*'|[^;\s]+)""",
+    re.I,
+)
 DKIM_DOMAIN_RE = re.compile(r"\bheader\.d=([^\s;]+)", re.I)
 
 MAX_MIME_PARTS = 200
@@ -162,10 +166,27 @@ def parse_authentication(message: Message, sender_domain: str | None) -> Authent
                 return AuthSignal(result=result_match.group(1).lower(), domain=auth_domain, aligned=aligned)
         return AuthSignal(result="none")
 
+    # These values are merely claims inside the supplied message. They are not
+    # treated as independently verified SMTP envelope data and never affect scoring.
+    smtp_mail_from_claims: list[str] = []
+    for header in values:
+        for match in SMTP_MAILFROM_RE.finditer(header):
+            candidate = match.group(1).strip()
+            if candidate.startswith("<") and candidate.endswith(">"):
+                candidate = candidate[1:-1].strip()
+                candidate = candidate if candidate else "<>"
+            else:
+                candidate = candidate.strip('"').strip("'").strip()
+            if candidate and candidate.casefold() not in {
+                value.casefold() for value in smtp_mail_from_claims
+            }:
+                smtp_mail_from_claims.append(candidate)
+
     return Authentication(
         spf=parse_one("spf"),
         dkim=parse_one("dkim"),
         dmarc=parse_one("dmarc"),
+        smtp_mail_from_claims=smtp_mail_from_claims,
         source_headers=len(values),
         trusted=False,
         untrusted_header_count=len(values),
