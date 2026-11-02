@@ -39,6 +39,7 @@ export interface EmailAnalysis {
     spf: AuthSignal;
     dkim: AuthSignal;
     dmarc: AuthSignal;
+    smtp_mail_from_claims: string[];
     source_headers: number;
     trusted: boolean;
     untrusted_header_count: number;
