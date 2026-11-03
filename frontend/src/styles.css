@@ -1184,6 +1184,3 @@ textarea,
   .sidebar-collapse::first-letter { font-size: 14px; }
   .nav-icon { font-size: 21px; }
 }
-@media (max-width: 440px) {
-  .theme-toggle { font-size: 0; }
-}
