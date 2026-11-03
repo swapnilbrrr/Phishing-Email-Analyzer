@@ -1068,3 +1068,122 @@ textarea,
 .engine-detail span{color:var(--muted);font-size:11px}.engine-detail strong{font-size:13px;overflow-wrap:anywhere}.engine-back-button{margin-top:22px}
 @media(max-width:760px){.app-body,.app-body.sidebar-collapsed{grid-template-columns:58px minmax(0,1fr)}.sidebar{padding:14px 6px}.sidebar-collapse{align-self:center;padding:7px}.nav-section-label{padding:0}.nav-item{justify-content:center;padding:10px 4px}.workspace{width:calc(100% - 28px);padding-top:32px}.engine-page{width:calc(100% - 28px);padding-top:36px}.topbar{padding:12px 14px}.topbar-label{display:none}.theme-toggle{padding:8px}.engine-details-grid{grid-template-columns:1fr}}
 @media(max-width:440px){.brand{font-size:11px}.brand-caption{font-size:8px}.topbar-actions{gap:6px}.engine-status-card{align-items:flex-start;padding:15px;flex-wrap:wrap}}
+
+
+/* Stage 1 light-theme contrast pass: map legacy dark-only surfaces and text to
+   readable light-theme equivalents without changing the default dark palette. */
+.app-shell[data-theme="light"] .hero-copy,
+.app-shell[data-theme="light"] .risk-card p,
+.app-shell[data-theme="light"] .top-findings-card p,
+.app-shell[data-theme="light"] .identity-card > span,
+.app-shell[data-theme="light"] .identity-row span,
+.app-shell[data-theme="light"] .card-header-row > span:last-child,
+.app-shell[data-theme="light"] .input-hint,
+.app-shell[data-theme="light"] .or-divider,
+.app-shell[data-theme="light"] .metric-label,
+.app-shell[data-theme="light"] .card-header-row,
+.app-shell[data-theme="light"] .confidence,
+.app-shell[data-theme="light"] .finding-score,
+.app-shell[data-theme="light"] .finding-meta,
+.app-shell[data-theme="light"] .empty-state,
+.app-shell[data-theme="light"] .footer,
+.app-shell[data-theme="light"] .data-row > span:first-child,
+.app-shell[data-theme="light"] .auth-none,
+.app-shell[data-theme="light"] .evidence-row span,
+.app-shell[data-theme="light"] .url-main span,
+.app-shell[data-theme="light"] .timeline-item span,
+.app-shell[data-theme="light"] .timeline-item small {
+  color: #526174;
+}
+.app-shell[data-theme="light"] .confidence strong,
+.app-shell[data-theme="light"] .identity-row b,
+.app-shell[data-theme="light"] .mini-finding,
+.app-shell[data-theme="light"] .data-row strong,
+.app-shell[data-theme="light"] .auth-state,
+.app-shell[data-theme="light"] .evidence-row strong,
+.app-shell[data-theme="light"] .timeline-item strong,
+.app-shell[data-theme="light"] .url-main code,
+.app-shell[data-theme="light"] .finding ul,
+.app-shell[data-theme="light"] .finding h3 {
+  color: #263648;
+}
+.app-shell[data-theme="light"] .section-heading,
+.app-shell[data-theme="light"] .result-header,
+.app-shell[data-theme="light"] .tabbar {
+  background: #ffffff;
+}
+.app-shell[data-theme="light"] .ghost-button,
+.app-shell[data-theme="light"] .dropzone,
+.app-shell[data-theme="light"] #raw-email,
+.app-shell[data-theme="light"] .timeline-index {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #263648;
+}
+.app-shell[data-theme="light"] .ghost-button:hover,
+.app-shell[data-theme="light"] .dropzone:hover {
+  border-color: #7898bd;
+  background: #f0f5fb;
+}
+.app-shell[data-theme="light"] .dropzone-label,
+.app-shell[data-theme="light"] #raw-email {
+  color: #263648;
+}
+.app-shell[data-theme="light"] #raw-email::placeholder {
+  color: #718096;
+}
+.app-shell[data-theme="light"] #raw-email:focus,
+.app-shell[data-theme="light"] .ghost-button:focus-visible,
+.app-shell[data-theme="light"] .theme-toggle:focus-visible,
+.app-shell[data-theme="light"] .sidebar-collapse:focus-visible,
+.app-shell[data-theme="light"] .nav-item:focus-visible,
+.app-shell[data-theme="light"] .tab:focus-visible,
+.app-shell[data-theme="light"] .primary-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.app-shell[data-theme="light"] .tab {
+  color: #526174;
+}
+.app-shell[data-theme="light"] .tab:hover,
+.app-shell[data-theme="light"] .tab.active {
+  color: #173f70;
+}
+.app-shell[data-theme="light"] .status-line {
+  border-color: var(--line);
+  background: #f7f9fc;
+  color: #526174;
+}
+.app-shell[data-theme="light"] .inline-error {
+  color: #9f2632;
+}
+.app-shell[data-theme="light"] .primary-button {
+  color: #ffffff;
+}
+.app-shell[data-theme="light"] .primary-button:hover {
+  background: #17477f;
+}
+.app-shell[data-theme="light"] .data-row,
+.app-shell[data-theme="light"] .evidence-row {
+  border-bottom-color: #e5eaf0;
+}
+.app-shell[data-theme="light"] .timeline-index {
+  color: #526174;
+}
+.app-shell[data-theme="light"] .app-body {
+  background: var(--bg);
+}
+.app-shell[data-theme="light"] .sidebar-collapse,
+.app-shell[data-theme="light"] .theme-toggle,
+.app-shell[data-theme="light"] .nav-item {
+  min-height: 40px;
+}
+@media (max-width: 760px) {
+  .nav-item { font-size: 0; }
+  .sidebar-collapse { font-size: 0; }
+  .sidebar-collapse::first-letter { font-size: 14px; }
+  .nav-icon { font-size: 21px; }
+}
+@media (max-width: 440px) {
+  .theme-toggle { font-size: 0; }
+}
