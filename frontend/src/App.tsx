@@ -150,7 +150,7 @@ export default function App() {
 
         <div className="topbar-actions">
           <span className="topbar-label">EMAIL SECURITY WORKSPACE</span>
-          <button className="theme-toggle" onClick={() => setTheme(t => t === "dark" ? "light" : "dark")} type="button">{theme === "dark" ? "☼ Light mode" : "☾ Dark mode"}</button>
+          <button className="theme-toggle" onClick={() => setTheme(t => t === "dark" ? "light" : "dark")} type="button" aria-pressed={theme === "light"} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}>{theme === "dark" ? "☼ Light mode" : "☾ Dark mode"}</button>
         </div>
       </header>
 
@@ -158,8 +158,8 @@ export default function App() {
         <aside className="sidebar" aria-label="Main navigation">
           <button className="sidebar-collapse" onClick={() => setCollapsed(v => !v)} type="button" aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>{collapsed ? "»" : "«"}{!collapsed && " Collapse"}</button>
           <p className="nav-section-label">{!collapsed && "WORKSPACE"}</p>
-          <button className={activePage === "analysis" ? "nav-item active" : "nav-item"} onClick={() => setActivePage("analysis")} type="button" title="Analyze email"><span className="nav-icon">⌕</span>{!collapsed && "Analyze email"}</button>
-          <button className={activePage === "engine" ? "nav-item active" : "nav-item"} onClick={() => setActivePage("engine")} type="button" title="Engine status"><span className="nav-icon">◉</span>{!collapsed && "Engine status"}</button>
+          <button className={activePage === "analysis" ? "nav-item active" : "nav-item"} onClick={() => setActivePage("analysis")} type="button" title="Analyze email" aria-current={activePage === "analysis" ? "page" : undefined}><span className="nav-icon">⌕</span>{!collapsed && "Analyze email"}</button>
+          <button className={activePage === "engine" ? "nav-item active" : "nav-item"} onClick={() => setActivePage("engine")} type="button" title="Engine status" aria-current={activePage === "engine" ? "page" : undefined}><span className="nav-icon">◉</span>{!collapsed && "Engine status"}</button>
         </aside>
         <main className="workspace">
           {activePage === "analysis" ? (<>
